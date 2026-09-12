@@ -26,7 +26,7 @@ from datetime import datetime
 
 # ---------------- Config ----------------
 COLLECTION_URL = "https://casiostore.bhawar.com/collections/watches/products.json"
-DISCOUNT_THRESHOLD = 70          # percent - change if you want a different cutoff
+DISCOUNT_THRESHOLD = 50          # percent - change if you want a different cutoff
 CHECK_INTERVAL_SECONDS = 300     # 5 minutes, used only in loop mode
 
 # Reads from the NTFY_TOPIC environment variable if set (used on GitHub Actions,
