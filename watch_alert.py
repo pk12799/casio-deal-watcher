@@ -7,12 +7,12 @@ collection, computes the real discount (price vs compare_at_price) for
 every variant, and pushes a phone notification via ntfy.sh the first
 time a deal crosses DISCOUNT_THRESHOLD percent.
 
-No third-party packages required - stdlib only, so it runs anywhere
-Python 3 is installed (laptop, Raspberry Pi, GitHub Actions, etc).
+No login and no third-party packages required - stdlib only, so it runs
+anywhere Python 3 is installed (laptop, Raspberry Pi, GitHub Actions, etc).
 
 Usage:
     python3 watch_alert.py           # run forever, checking on an interval
-    python3 watch_alert.py --once    # check a single time and exit (for cron / GitHub Actions)
+    python3 watch_alert.py --once    # check a single time and exit (cron / GitHub Actions)
 """
 
 import argparse
@@ -26,17 +26,37 @@ from datetime import datetime
 
 # ---------------- Config ----------------
 COLLECTION_URL = "https://casiostore.bhawar.com/collections/watches/products.json"
-DISCOUNT_THRESHOLD = 50          # percent - change if you want a different cutoff
+DISCOUNT_THRESHOLD = 70          # percent - change if you want a different cutoff
 CHECK_INTERVAL_SECONDS = 300     # 5 minutes, used only in loop mode
 
 # Reads from the NTFY_TOPIC environment variable if set (used on GitHub Actions,
-# where it comes from a repo secret). Falls back to the hardcoded value below
-# for local runs - edit that fallback to your own random topic name.
+# where it comes from a repo secret, or from a local .env file). Falls back to
+# the hardcoded value below for convenience - change it to your own random topic.
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "casio-deals-CHANGE-ME")
+
 STATE_FILE = Path(__file__).with_name("seen_deals.json")
 USER_AGENT = "Mozilla/5.0 (compatible; PersonalDealBot/1.0)"
 REQUEST_TIMEOUT = 15
 # -----------------------------------------
+
+
+def load_local_env():
+    """
+    Tiny, dependency-free .env loader for local runs. If a .env file sits
+    next to this script, load KEY=VALUE lines into os.environ (without
+    overwriting variables already set in the real environment). Ignored
+    on GitHub Actions, where secrets arrive as real env vars.
+    """
+    env_path = Path(__file__).with_name(".env")
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
 
 
 def fetch_products():
@@ -166,6 +186,8 @@ def main_loop():
 
 
 if __name__ == "__main__":
+    load_local_env()
+
     parser = argparse.ArgumentParser(description="Casio Bhawar Store discount watcher")
     parser.add_argument("--once", action="store_true", help="Run a single check and exit")
     args = parser.parse_args()
