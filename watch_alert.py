@@ -4,11 +4,16 @@ Casio Bhawar Store - Deep Discount Watcher
 -------------------------------------------
 Polls the public Shopify product feed for the /collections/watches
 collection, computes the real discount (price vs compare_at_price) for
-every variant, and pushes a phone notification via ntfy.sh the first
-time a deal crosses DISCOUNT_THRESHOLD percent.
+every variant, and alerts you the first time a deal crosses
+DISCOUNT_THRESHOLD percent - via a push notification (with the watch's
+photo attached) and, optionally, email.
 
-No login and no third-party packages required - stdlib only, so it runs
-anywhere Python 3 is installed (laptop, Raspberry Pi, GitHub Actions, etc).
+A given deal (product + price) won't re-alert for SEEN_TTL_HOURS, after
+which it "forgets" it and will alert again if the discount is still live -
+so a recurring flash sale keeps notifying you each time it reappears
+instead of going silent forever after the first hit.
+
+No third-party packages required - stdlib only.
 
 Usage:
     python3 watch_alert.py           # run forever, checking on an interval
@@ -18,21 +23,31 @@ Usage:
 import argparse
 import json
 import os
+import smtplib
 import time
 import urllib.request
 import urllib.error
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ---------------- Config ----------------
 COLLECTION_URL = "https://casiostore.bhawar.com/collections/watches/products.json"
-DISCOUNT_THRESHOLD = 50          # percent - change if you want a different cutoff
+DISCOUNT_THRESHOLD = 70          # percent - change if you want a different cutoff
 CHECK_INTERVAL_SECONDS = 300     # 5 minutes, used only in loop mode
+SEEN_TTL_HOURS = 24              # a deal "forgotten" after this long can alert again
 
-# Reads from the NTFY_TOPIC environment variable if set (used on GitHub Actions,
-# where it comes from a repo secret, or from a local .env file). Falls back to
-# the hardcoded value below for convenience - change it to your own random topic.
+# ntfy (push notifications) - reads NTFY_TOPIC from env / GitHub secret / .env
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "casio-deals-CHANGE-ME")
+
+# Email (optional) - only used if SMTP_HOST and EMAIL_TO are both set.
+SMTP_HOST = os.environ.get("SMTP_HOST")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER")
+SMTP_PASS = os.environ.get("SMTP_PASS")
+EMAIL_TO = os.environ.get("EMAIL_TO")
+EMAIL_ENABLED = bool(SMTP_HOST and EMAIL_TO)
 
 STATE_FILE = Path(__file__).with_name("seen_deals.json")
 USER_AGENT = "Mozilla/5.0 (compatible; PersonalDealBot/1.0)"
@@ -92,6 +107,9 @@ def find_deep_discounts(products, threshold):
     for product in products:
         title = product.get("title", "Unknown")
         handle = product.get("handle", "")
+        images = product.get("images") or []
+        image_url = images[0]["src"] if images and images[0].get("src") else None
+
         for variant in product.get("variants", []):
             try:
                 price = float(variant.get("price") or 0)
@@ -112,45 +130,103 @@ def find_deep_discounts(products, threshold):
                     "compare_at": compare_at,
                     "discount_pct": round(discount_pct, 1),
                     "url": f"https://casiostore.bhawar.com/products/{handle}?variant={variant.get('id')}",
+                    "image_url": image_url,
                 })
     return deals
 
 
 def load_seen():
-    if STATE_FILE.exists():
+    """Load seen deals, dropping any entry older than SEEN_TTL_HOURS so it
+    can alert again if the discount is still (or newly) live."""
+    if not STATE_FILE.exists():
+        return {}
+    try:
+        raw = json.loads(STATE_FILE.read_text())
+    except json.JSONDecodeError:
+        return {}
+
+    cutoff = datetime.now() - timedelta(hours=SEEN_TTL_HOURS)
+    fresh = {}
+    for key, entry in raw.items():
+        seen_at_str = entry.get("seen_at") if isinstance(entry, dict) else None
         try:
-            return json.loads(STATE_FILE.read_text())
-        except json.JSONDecodeError:
-            return {}
-    return {}
+            seen_at = datetime.fromisoformat(seen_at_str) if seen_at_str else None
+        except ValueError:
+            seen_at = None
+        if seen_at is None or seen_at < cutoff:
+            continue  # expired (or malformed/legacy entry) - treat as forgotten
+        fresh[key] = entry
+    return fresh
 
 
 def save_seen(seen):
     STATE_FILE.write_text(json.dumps(seen, indent=2))
 
 
-def notify(deal):
+def send_ntfy(deal):
     message = (
         f"{deal['title']} ({deal['variant_title']})\n"
         f"{deal['discount_pct']}% off - Rs.{deal['price']:.0f} (was Rs.{deal['compare_at']:.0f})\n"
         f"{deal['url']}"
     )
-    url = f"https://ntfy.sh/{NTFY_TOPIC}"
+    headers = {
+        "Title": f"Casio deal: {deal['discount_pct']}% off",
+        "Priority": "high",
+        "Tags": "watch,moneybag",
+        "Click": deal["url"],
+    }
+    if deal.get("image_url"):
+        headers["Attach"] = deal["image_url"]  # ntfy fetches this URL and shows it as a photo
+
     req = urllib.request.Request(
-        url,
+        f"https://ntfy.sh/{NTFY_TOPIC}",
         data=message.encode("utf-8"),
-        headers={
-            "Title": f"Casio deal: {deal['discount_pct']}% off",
-            "Priority": "high",
-            "Tags": "watch,moneybag",
-        },
+        headers=headers,
         method="POST",
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-        print(f"Notified: {deal['title']} - {deal['discount_pct']}% off")
     except Exception as e:
-        print(f"Failed to send notification: {e}")
+        print(f"Failed to send ntfy notification: {e}")
+
+
+def send_email(deal):
+    if not EMAIL_ENABLED:
+        return
+    subject = f"Casio deal: {deal['discount_pct']}% off {deal['title']}"
+    image_html = (
+        f'<p><img src="{deal["image_url"]}" alt="watch photo" style="max-width:400px;"></p>'
+        if deal.get("image_url") else ""
+    )
+    html = f"""
+    <html><body>
+      <h2>{deal['title']} ({deal['variant_title']})</h2>
+      {image_html}
+      <p><b>{deal['discount_pct']}% off</b> — Rs.{deal['price']:.0f}
+         <s>Rs.{deal['compare_at']:.0f}</s></p>
+      <p><a href="{deal['url']}">View watch on the store</a></p>
+    </body></html>
+    """
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = SMTP_USER or EMAIL_TO
+    msg["To"] = EMAIL_TO
+    msg.attach(MIMEText(html, "html"))
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=REQUEST_TIMEOUT) as server:
+            server.starttls()
+            if SMTP_USER and SMTP_PASS:
+                server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(msg["From"], [EMAIL_TO], msg.as_string())
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+
+def notify_deal(deal):
+    send_ntfy(deal)
+    send_email(deal)
+    print(f"Notified: {deal['title']} - {deal['discount_pct']}% off")
 
 
 def run_once():
@@ -163,14 +239,14 @@ def run_once():
     for deal in deals:
         key = f"{deal['id']}:{deal['price']}"
         if key not in seen:
-            notify(deal)
-            seen[key] = deal
+            notify_deal(deal)
+            seen[key] = {**deal, "seen_at": datetime.now().isoformat()}
             new_deals += 1
 
-    if new_deals:
-        save_seen(seen)
-    else:
+    if new_deals == 0:
         print("No new deals above threshold.")
+
+    save_seen(seen)  # always save, so expired entries actually get pruned from disk
     return new_deals
 
 
