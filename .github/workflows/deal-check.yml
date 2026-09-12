@@ -2,14 +2,21 @@ name: Casio deal check
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # every 15 minutes - GitHub's free minimum is 5, 15 is kinder to the site
-  workflow_dispatch: {}       # lets you trigger it manually from the Actions tab too
+    - cron: "*/15 * * * *"   # every 15 minutes - kind to the site and well within free minutes
+  workflow_dispatch: {}       # lets you trigger a run manually from the Actions tab
+
+permissions:
+  contents: write            # needed so the job can commit seen_deals.json
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Run watcher
         env:
@@ -21,5 +28,5 @@ jobs:
           git config user.name "deal-bot"
           git config user.email "deal-bot@users.noreply.github.com"
           git add seen_deals.json
-          git diff --staged --quiet || git commit -m "update seen deals"
+          git diff --staged --quiet || git commit -m "chore: update seen deals"
           git push
