@@ -34,7 +34,7 @@ from datetime import datetime, timedelta
 
 # ---------------- Config ----------------
 COLLECTION_URL = "https://casiostore.bhawar.com/collections/watches/products.json"
-DISCOUNT_THRESHOLD = 50          # percent - change if you want a different cutoff
+DISCOUNT_THRESHOLD = 70          # percent - change if you want a different cutoff
 CHECK_INTERVAL_SECONDS = 300     # 5 minutes, used only in loop mode
 SEEN_TTL_HOURS = 24              # a deal "forgotten" after this long can alert again
 
@@ -125,7 +125,7 @@ def find_deep_discounts(products, threshold):
                 deals.append({
                     "id": variant.get("id"),
                     "title": title,
-                    "variant_title": variant.get("title"),
+                 #   "variant_title": variant.get("title"),
                     "price": price,
                     "compare_at": compare_at,
                     "discount_pct": round(discount_pct, 1),
@@ -165,7 +165,7 @@ def save_seen(seen):
 
 def send_ntfy(deal):
     message = (
-        f"{deal['title']} ({deal['variant_title']})\n"
+        f"{deal['title']} \n"
         f"{deal['discount_pct']}% off - Rs.{deal['price']:.0f} (was Rs.{deal['compare_at']:.0f})\n"
         f"{deal['url']}"
     )
@@ -200,7 +200,7 @@ def send_email(deal):
     )
     html = f"""
     <html><body>
-      <h2>{deal['title']} ({deal['variant_title']})</h2>
+      <h2>{deal['title']}</h2>
       {image_html}
       <p><b>{deal['discount_pct']}% off</b> — Rs.{deal['price']:.0f}
          <s>Rs.{deal['compare_at']:.0f}</s></p>
