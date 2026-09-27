@@ -6,8 +6,7 @@ push notification and (optionally) email.
 
 ## How it works
 
-1. Pulls every product in the collection via Shopify's public JSON feed
-   (no login needed — prices are visible to everyone).
+1. Pulls every product in the collection via Shopify's public JSON feed.
 2. Computes the real discount percentage itself from `price` vs.
    `compare_at_price`, rather than relying on the site's own "% off" tag.
 3. The first time a specific variant+price crosses the threshold, it sends
