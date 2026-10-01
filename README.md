@@ -6,13 +6,20 @@ push notification and (optionally) email.
 
 ## How it works
 
-1. Pulls every product in the collection via Shopify's public JSON feed.
-2. Computes the real discount percentage itself from `price` vs.
-   `compare_at_price`, rather than relying on the site's own "% off" tag.
-3. The first time a specific variant+price crosses the threshold, it sends
+1. Logs into the store with your customer account (`SHOP_EMAIL` /
+   `SHOP_PASSWORD`). **This is required** — the store only renders its sale
+   prices for signed-in customers. Logged out, every product (and the public
+   `products.json` feed) reports MRP with `(0% Off)`, which is why the feed
+   never showed the 50–70% deals.
+2. Walks every page of `/collections/watches` with that session and reads the
+   rendered `MRP ₹ …` vs. `₹ …` sale price off each product card, so nothing
+   is missed regardless of what the JSON feed claims.
+3. Product photos/titles/variant ids still come from the public JSON feed and
+   are merged in by handle.
+4. The first time a specific product+price crosses the threshold, it sends
    a push notification (with the watch's photo attached) via
    [ntfy](https://ntfy.sh), and an email if you've configured SMTP.
-4. Remembers each alerted deal in `seen_deals.json` for **24 hours**
+5. Remembers each alerted deal in `seen_deals.json` for **24 hours**
    (`SEEN_TTL_HOURS`) so you don't get repeat alerts for the same still-live
    deal — but if it's still discounted after 24h, or the discount reappears
    later, you'll be notified again rather than it going silent forever.
@@ -20,6 +27,8 @@ push notification and (optionally) email.
 ## Requirements
 
 - Python 3.9+ — no external packages, standard library only
+- A customer account on `casiostore.bhawar.com` (email + password login;
+  if the store ever switches to passwordless/OTP login this will need updating)
 - The [ntfy](https://ntfy.sh) app on your phone (free, no signup)
 - (Optional) an SMTP account for email alerts — e.g. a Gmail address with
   an [app password](https://myaccount.google.com/apppasswords)
@@ -31,6 +40,10 @@ commit it):
 
 ```
 NTFY_TOPIC=pick-something-long-and-random
+
+# Required - sale prices are only visible to logged-in customers
+SHOP_EMAIL=you@example.com
+SHOP_PASSWORD=your_store_password
 
 # Optional - only add these if you also want email alerts
 SMTP_HOST=smtp.gmail.com
@@ -58,13 +71,15 @@ a `screen`/`tmux` session, or a systemd user service / Task Scheduler entry.
    free Actions minutes; a private repo works too but gets 2,000 free
    minutes/month, so widen the cron interval to ~30 min to stay under that).
 2. Repo → **Settings → Secrets and variables → Actions → New repository
-   secret** → add `NTFY_TOPIC`. Add the five `SMTP_*` / `EMAIL_TO` secrets
-   too if you want email alerts (leave them unset to skip email entirely).
+   secret** → add `NTFY_TOPIC`, `SHOP_EMAIL` and `SHOP_PASSWORD`. Add the five
+   `SMTP_*` / `EMAIL_TO` secrets too if you want email alerts (leave them
+   unset to skip email entirely).
 3. Repo → **Settings → Actions → General → Workflow permissions** → select
    **Read and write permissions** → Save. (Lets the workflow commit updated
    `seen_deals.json` after each run.)
 4. Repo → **Actions** tab → select "Casio deal check" → **Run workflow** to
-   test it manually. Check the log for `Checked N products`.
+   test it manually. Check the log for `Logged in as a customer.` and
+   `Scraped prices for N products`.
 5. From then on it runs automatically every 15 minutes, for free.
 
 ## Email setup notes (optional)
