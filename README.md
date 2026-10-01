@@ -1,26 +1,53 @@
 # Casio Bhawar Store — Deep Discount Watcher
 
-Watches `casiostore.bhawar.com/collections/watches` for watches discounted
-70% or more, and alerts you the moment one appears — with a photo, via
-push notification and (optionally) email.
+Watches `casiostore.bhawar.com` for deeply discounted, **in-stock** Casio
+watches and alerts you the moment one appears — with a photo, via push
+notification and (optionally) email.
 
 ## How it works
 
-1. Pulls every product in the collection via Shopify's public JSON feed.
+1. Sweeps the public Shopify JSON feeds for `/collections/all` **plus**
+   `watches`, `edifice-watches`, `g-shock`, `casio-vintage`, `casio` and
+   `new-launch`, de-duplicating by product handle (~1,360 unique products).
+
+   > Why not just `/collections/watches`? Because that collection only
+   > exposes ~407 products. Plenty of discounted models — MTP-VT01G-9B at
+   > 50% off, for example — simply aren't tagged into it, so watching that
+   > one collection silently missed them.
+
 2. Computes the real discount percentage itself from `price` vs.
    `compare_at_price`, rather than relying on the site's own "% off" tag.
-3. The first time a specific variant+price crosses the threshold, it sends
+   (The collection *pages* render `MRP ₹ … (0% Off)` on every card because
+   the theme shows the product-level price range, not the variant sale
+   price — the JSON feed is the accurate source.)
+3. Skips any variant marked `"available": false` — sold-out watches are
+   filtered out so you're only pinged about deals you can actually buy.
+4. The first time a specific variant+price crosses the threshold, it sends
    a push notification (with the watch's photo attached) via
    [ntfy](https://ntfy.sh), and an email if you've configured SMTP.
-4. Remembers each alerted deal in `seen_deals.json` for **24 hours**
+   Deals are processed highest-discount-first.
+5. Remembers each alerted deal in `seen_deals.json` for **24 hours**
    (`SEEN_TTL_HOURS`) so you don't get repeat alerts for the same still-live
    deal — but if it's still discounted after 24h, or the discount reappears
    later, you'll be notified again rather than it going silent forever.
+
+## Checking what's on sale right now
+
+```bash
+python3 watch_alert.py --dry-run
+```
+
+Lists every current in-stock deal without sending notifications or touching
+`seen_deals.json`. Useful for sanity-checking the threshold before you let
+it loose.
 
 ## Requirements
 
 - Python 3.9+ — no external packages, standard library only
 - The [ntfy](https://ntfy.sh) app on your phone (free, no signup)
+- (Optional) a customer account on the store — `SHOP_EMAIL` / `SHOP_PASSWORD`
+  make requests with a logged-in session. Not required; the public feed
+  already carries the sale prices.
 - (Optional) an SMTP account for email alerts — e.g. a Gmail address with
   an [app password](https://myaccount.google.com/apppasswords)
 
@@ -31,6 +58,10 @@ commit it):
 
 ```
 NTFY_TOPIC=pick-something-long-and-random
+
+# Optional - browse with a logged-in session (not needed for prices)
+SHOP_EMAIL=you@example.com
+SHOP_PASSWORD=your_store_password
 
 # Optional - only add these if you also want email alerts
 SMTP_HOST=smtp.gmail.com
@@ -58,13 +89,14 @@ a `screen`/`tmux` session, or a systemd user service / Task Scheduler entry.
    free Actions minutes; a private repo works too but gets 2,000 free
    minutes/month, so widen the cron interval to ~30 min to stay under that).
 2. Repo → **Settings → Secrets and variables → Actions → New repository
-   secret** → add `NTFY_TOPIC`. Add the five `SMTP_*` / `EMAIL_TO` secrets
-   too if you want email alerts (leave them unset to skip email entirely).
+   secret** → add `NTFY_TOPIC`, `SHOP_EMAIL` and `SHOP_PASSWORD`. Add the five
+   `SMTP_*` / `EMAIL_TO` secrets too if you want email alerts (leave them
+   unset to skip email entirely).
 3. Repo → **Settings → Actions → General → Workflow permissions** → select
    **Read and write permissions** → Save. (Lets the workflow commit updated
    `seen_deals.json` after each run.)
 4. Repo → **Actions** tab → select "Casio deal check" → **Run workflow** to
-   test it manually. Check the log for `Checked N products`.
+   test it manually. Check the log for `Checked N unique products`.
 5. From then on it runs automatically every 15 minutes, for free.
 
 ## Email setup notes (optional)
