@@ -21,6 +21,9 @@ jobs:
       - name: Run watcher
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # Store login - required, the sale prices are only shown to logged-in customers.
+          SHOP_EMAIL: ${{ secrets.SHOP_EMAIL }}
+          SHOP_PASSWORD: ${{ secrets.SHOP_PASSWORD }}
           # Email is optional - only set these secrets if you want email alerts too.
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
