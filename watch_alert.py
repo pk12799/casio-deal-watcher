@@ -2,11 +2,18 @@
 """
 Casio Bhawar Store - Deep Discount Watcher
 -------------------------------------------
-Polls the public Shopify product feed for the /collections/watches
-collection, computes the real discount (price vs compare_at_price) for
-every variant, and alerts you the first time a deal crosses
+Logs into the store as a customer, walks every page of the
+/collections/watches collection, reads the *rendered* price vs. MRP for
+each product card, and alerts you the first time a deal crosses
 DISCOUNT_THRESHOLD percent - via a push notification (with the watch's
 photo attached) and, optionally, email.
+
+Why not the public products.json feed? Because this store applies its
+discounts for logged-in customers only: logged out, every product (and
+therefore the JSON feed) shows MRP with "(0% Off)", even when the product
+page shows e.g. "70% Special Offer" to a signed-in shopper. So we scrape
+the HTML with an authenticated session instead. Set SHOP_EMAIL and
+SHOP_PASSWORD or you will see no deals at all.
 
 A given deal (product + price) won't re-alert for SEEN_TTL_HOURS, after
 which it "forgets" it and will alert again if the discount is still live -
@@ -21,10 +28,14 @@ Usage:
 """
 
 import argparse
+import html as html_module
+import http.cookiejar
 import json
 import os
+import re
 import smtplib
 import time
+import urllib.parse
 import urllib.request
 import urllib.error
 from email.mime.multipart import MIMEMultipart
@@ -33,13 +44,23 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 # ---------------- Config ----------------
-COLLECTION_URL = "https://casiostore.bhawar.com/collections/watches/products.json"
+STORE = "https://casiostore.bhawar.com"
+COLLECTION_URL = f"{STORE}/collections/watches/products.json"
+COLLECTION_HTML_URL = f"{STORE}/collections/watches"
+LOGIN_URL = f"{STORE}/account/login"
 DISCOUNT_THRESHOLD = 50          # percent - change if you want a different cutoff
 CHECK_INTERVAL_SECONDS = 300     # 5 minutes, used only in loop mode
 SEEN_TTL_HOURS = 24              # a deal "forgotten" after this long can alert again
+MAX_COLLECTION_PAGES = 40        # safety stop when walking the collection HTML
+
+# Store login - the discounted prices are only rendered for logged-in
+# customers, so without these the watcher only sees MRP (0% off).
+SHOP_EMAIL = os.environ.get("SHOP_EMAIL")
+SHOP_PASSWORD = os.environ.get("SHOP_PASSWORD")
 
 # ntfy (push notifications) - reads NTFY_TOPIC from env / GitHub secret / .env
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "casio-deals-CHANGE-ME")
+
 
 # Email (optional) - only used if SMTP_HOST and EMAIL_TO are both set.
 SMTP_HOST = os.environ.get("SMTP_HOST")
@@ -50,8 +71,11 @@ EMAIL_TO = os.environ.get("EMAIL_TO")
 EMAIL_ENABLED = bool(SMTP_HOST and EMAIL_TO)
 
 STATE_FILE = Path(__file__).with_name("seen_deals.json")
-USER_AGENT = "Mozilla/5.0 (compatible; PersonalDealBot/1.0)"
-REQUEST_TIMEOUT = 15
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/125.0 Safari/537.36"
+)
+REQUEST_TIMEOUT = 40
 # -----------------------------------------
 
 
@@ -74,64 +98,211 @@ def load_local_env():
         os.environ.setdefault(key, value)
 
 
-def fetch_products():
-    """Pull every product in the collection via Shopify's public JSON feed."""
-    products = []
-    page = 1
-    while True:
-        url = f"{COLLECTION_URL}?limit=250&page={page}"
-        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-        try:
-            with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
-                data = json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            print(f"HTTP error on page {page}: {e}")
-            break
-        except Exception as e:
-            print(f"Error fetching page {page}: {e}")
-            break
+def make_session():
+    """A urllib opener that keeps cookies, so we stay logged in."""
+    jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    opener.addheaders = [
+        ("User-Agent", USER_AGENT),
+        ("Accept", "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8"),
+        ("Accept-Language", "en-US,en;q=0.9"),
+    ]
+    return opener
 
-        batch = data.get("products", [])
+
+def get_text(opener, url, data=None, referer=None):
+    headers = {"Referer": referer} if referer else {}
+    body = urllib.parse.urlencode(data).encode() if data else None
+    req = urllib.request.Request(url, data=body, headers=headers)
+    with opener.open(req, timeout=REQUEST_TIMEOUT) as resp:
+        return resp.read().decode("utf-8", "ignore"), resp.geturl()
+
+
+def login(opener):
+    """
+    Log into the Shopify storefront as a customer. The store only renders the
+    real sale prices (e.g. 70% Special Offer) for logged-in customers - logged
+    out, every product shows MRP with "(0% Off)", which is why the public
+    products.json feed never reports a discount.
+
+    Returns True if the session looks authenticated.
+    """
+    if not (SHOP_EMAIL and SHOP_PASSWORD):
+        print("SHOP_EMAIL / SHOP_PASSWORD not set - running logged out "
+              "(you will only see MRP, not the member sale prices).")
+        return False
+
+    try:
+        get_text(opener, LOGIN_URL)  # pick up session + CSRF cookies
+        _, final_url = get_text(
+            opener,
+            LOGIN_URL,
+            data={
+                "form_type": "customer_login",
+                "utf8": "✓",
+                "customer[email]": SHOP_EMAIL,
+                "customer[password]": SHOP_PASSWORD,
+                "return_url": "/account",
+            },
+            referer=LOGIN_URL,
+        )
+        account_html, account_url = get_text(opener, f"{STORE}/account")
+    except Exception as e:
+        print(f"Login failed: {e}")
+        return False
+
+    logged_in = "/account/login" not in account_url and (
+        "logout" in account_html.lower() or "order history" in account_html.lower()
+    )
+    print("Logged in as a customer." if logged_in
+          else f"Login did not take (landed on {final_url}). Check SHOP_EMAIL/SHOP_PASSWORD.")
+    return logged_in
+
+
+def fetch_product_catalogue(opener):
+    """
+    Handle -> {title, image_url, variant_id} from the public JSON feed.
+    Used only for metadata (photo, variant id); prices come from the
+    logged-in HTML pages.
+    """
+    catalogue = {}
+    page = 1
+    while page <= MAX_COLLECTION_PAGES:
+        url = f"{COLLECTION_URL}?limit=250&page={page}"
+        try:
+            raw, _ = get_text(opener, url)
+            batch = json.loads(raw).get("products", [])
+        except Exception as e:
+            print(f"Error fetching product feed page {page}: {e}")
+            break
         if not batch:
             break
-        products.extend(batch)
+        for product in batch:
+            images = product.get("images") or []
+            variants = product.get("variants") or []
+            catalogue[product.get("handle", "")] = {
+                "title": product.get("title", "Unknown"),
+                "image_url": images[0]["src"] if images and images[0].get("src") else None,
+                "variant_id": variants[0].get("id") if variants else None,
+            }
         if len(batch) < 250:
             break
         page += 1
-    return products
+    return catalogue
 
 
-def find_deep_discounts(products, threshold):
-    """Return every variant whose real discount % is >= threshold."""
+PRICE_RE = re.compile(r"(?:MRP\s*)?(?:₹|Rs\.?|INR)\s*([\d,]+(?:\.\d+)?)")
+SALE_RE = re.compile(
+    r'price-item[^"]*price-item--sale[^"]*"[^>]*>\s*((?:MRP\s*)?(?:₹|Rs\.?|INR)\s*[\d,]+(?:\.\d+)?)',
+    re.I,
+)
+REGULAR_RE = re.compile(
+    r'<s[^>]*price-item--regular[^>]*>\s*((?:MRP\s*)?(?:₹|Rs\.?|INR)\s*[\d,]+(?:\.\d+)?)',
+    re.I,
+)
+PLAIN_REGULAR_RE = re.compile(
+    r'<span[^>]*price-item--regular[^>]*>\s*((?:MRP\s*)?(?:₹|Rs\.?|INR)\s*[\d,]+(?:\.\d+)?)',
+    re.I,
+)
+HANDLE_RE = re.compile(r"/products/([a-z0-9][a-z0-9\-]*)")
+
+
+def _to_amount(text):
+    if not text:
+        return 0.0
+    m = PRICE_RE.search(html_module.unescape(text).replace("\xa0", " "))
+    if not m:
+        return 0.0
+    try:
+        return float(m.group(1).replace(",", ""))
+    except ValueError:
+        return 0.0
+
+
+def parse_collection_page(html):
+    """
+    Pull (handle, price, compare_at) out of every product card on a rendered
+    collection page. Cards look like:
+        <s class="price-item price-item--regular">MRP ₹ 5,995</s>
+        <span class="price-item price-item--sale ...">₹ 1,799</span>
+    """
+    results = []
+    chunks = html.split("card__content")
+    for chunk in chunks[1:]:
+        handle_match = HANDLE_RE.search(chunk)
+        if not handle_match:
+            continue
+        handle = handle_match.group(1)
+        price_block = chunk[:20000]
+
+        sale = _to_amount(SALE_RE.search(price_block).group(1)) if SALE_RE.search(price_block) else 0.0
+        regular_match = REGULAR_RE.search(price_block) or PLAIN_REGULAR_RE.search(price_block)
+        regular = _to_amount(regular_match.group(1)) if regular_match else 0.0
+
+        if not sale and regular:
+            sale = regular
+        if not sale:
+            continue
+        results.append({"handle": handle, "price": sale, "compare_at": max(regular, sale)})
+    return results
+
+
+def fetch_live_prices(opener):
+    """Walk every page of the watches collection and read the rendered prices."""
+    prices = {}
+    page = 1
+    while page <= MAX_COLLECTION_PAGES:
+        url = f"{COLLECTION_HTML_URL}?page={page}"
+        try:
+            html, _ = get_text(opener, url)
+        except Exception as e:
+            print(f"Error fetching collection page {page}: {e}")
+            break
+
+        cards = parse_collection_page(html)
+        if not cards:
+            break
+
+        new_on_page = 0
+        for card in cards:
+            if card["handle"] not in prices:
+                prices[card["handle"]] = card
+                new_on_page += 1
+        if new_on_page == 0:          # pagination wrapped around / repeated page
+            break
+        page += 1
+    print(f"Scraped prices for {len(prices)} products across {page - 1} collection page(s)")
+    return prices
+
+
+def fetch_deals(opener, threshold):
+    """Every product whose live (logged-in) price is >= threshold percent off."""
+    catalogue = fetch_product_catalogue(opener)
+    prices = fetch_live_prices(opener)
+
     deals = []
-    for product in products:
-        title = product.get("title", "Unknown")
-        handle = product.get("handle", "")
-        images = product.get("images") or []
-        image_url = images[0]["src"] if images and images[0].get("src") else None
+    for handle, card in prices.items():
+        price, compare_at = card["price"], card["compare_at"]
+        if price <= 0 or compare_at <= 0 or price >= compare_at:
+            continue
+        discount_pct = (compare_at - price) / compare_at * 100
+        if discount_pct < threshold:
+            continue
 
-        for variant in product.get("variants", []):
-            try:
-                price = float(variant.get("price") or 0)
-                compare_at = float(variant.get("compare_at_price") or 0)
-            except (TypeError, ValueError):
-                continue
-
-            if compare_at <= 0 or price <= 0 or price >= compare_at:
-                continue
-
-            discount_pct = (compare_at - price) / compare_at * 100
-            if discount_pct >= threshold:
-                deals.append({
-                    "id": variant.get("id"),
-                    "title": title,
-                 #   "variant_title": variant.get("title"),
-                    "price": price,
-                    "compare_at": compare_at,
-                    "discount_pct": round(discount_pct, 1),
-                    "url": f"https://casiostore.bhawar.com/products/{handle}?variant={variant.get('id')}",
-                    "image_url": image_url,
-                })
+        meta = catalogue.get(handle, {})
+        variant_id = meta.get("variant_id")
+        url = f"{STORE}/products/{handle}"
+        if variant_id:
+            url += f"?variant={variant_id}"
+        deals.append({
+            "id": variant_id or handle,
+            "title": meta.get("title") or handle.replace("-", " ").title(),
+            "price": price,
+            "compare_at": compare_at,
+            "discount_pct": round(discount_pct, 1),
+            "url": url,
+            "image_url": meta.get("image_url"),
+        })
     return deals
 
 
@@ -231,10 +402,13 @@ def notify_deal(deal):
 
 def run_once():
     seen = load_seen()
-    products = fetch_products()
-    print(f"[{datetime.now().isoformat(timespec='seconds')}] Checked {len(products)} products")
+    opener = make_session()
+    login(opener)
 
-    deals = find_deep_discounts(products, DISCOUNT_THRESHOLD)
+    deals = fetch_deals(opener, DISCOUNT_THRESHOLD)
+    print(f"[{datetime.now().isoformat(timespec='seconds')}] "
+          f"{len(deals)} product(s) at >= {DISCOUNT_THRESHOLD}% off")
+
     new_deals = 0
     for deal in deals:
         key = f"{deal['id']}:{deal['price']}"
