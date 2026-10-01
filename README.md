@@ -1,35 +1,53 @@
 # Casio Bhawar Store — Deep Discount Watcher
 
-Watches `casiostore.bhawar.com/collections/watches` for watches discounted
-70% or more, and alerts you the moment one appears — with a photo, via
-push notification and (optionally) email.
+Watches `casiostore.bhawar.com` for deeply discounted, **in-stock** Casio
+watches and alerts you the moment one appears — with a photo, via push
+notification and (optionally) email.
 
 ## How it works
 
-1. Logs into the store with your customer account (`SHOP_EMAIL` /
-   `SHOP_PASSWORD`). **This is required** — the store only renders its sale
-   prices for signed-in customers. Logged out, every product (and the public
-   `products.json` feed) reports MRP with `(0% Off)`, which is why the feed
-   never showed the 50–70% deals.
-2. Walks every page of `/collections/watches` with that session and reads the
-   rendered `MRP ₹ …` vs. `₹ …` sale price off each product card, so nothing
-   is missed regardless of what the JSON feed claims.
-3. Product photos/titles/variant ids still come from the public JSON feed and
-   are merged in by handle.
-4. The first time a specific product+price crosses the threshold, it sends
+1. Sweeps the public Shopify JSON feeds for `/collections/all` **plus**
+   `watches`, `edifice-watches`, `g-shock`, `casio-vintage`, `casio` and
+   `new-launch`, de-duplicating by product handle (~1,360 unique products).
+
+   > Why not just `/collections/watches`? Because that collection only
+   > exposes ~407 products. Plenty of discounted models — MTP-VT01G-9B at
+   > 50% off, for example — simply aren't tagged into it, so watching that
+   > one collection silently missed them.
+
+2. Computes the real discount percentage itself from `price` vs.
+   `compare_at_price`, rather than relying on the site's own "% off" tag.
+   (The collection *pages* render `MRP ₹ … (0% Off)` on every card because
+   the theme shows the product-level price range, not the variant sale
+   price — the JSON feed is the accurate source.)
+3. Skips any variant marked `"available": false` — sold-out watches are
+   filtered out so you're only pinged about deals you can actually buy.
+4. The first time a specific variant+price crosses the threshold, it sends
    a push notification (with the watch's photo attached) via
    [ntfy](https://ntfy.sh), and an email if you've configured SMTP.
+   Deals are processed highest-discount-first.
 5. Remembers each alerted deal in `seen_deals.json` for **24 hours**
    (`SEEN_TTL_HOURS`) so you don't get repeat alerts for the same still-live
    deal — but if it's still discounted after 24h, or the discount reappears
    later, you'll be notified again rather than it going silent forever.
 
+## Checking what's on sale right now
+
+```bash
+python3 watch_alert.py --dry-run
+```
+
+Lists every current in-stock deal without sending notifications or touching
+`seen_deals.json`. Useful for sanity-checking the threshold before you let
+it loose.
+
 ## Requirements
 
 - Python 3.9+ — no external packages, standard library only
-- A customer account on `casiostore.bhawar.com` (email + password login;
-  if the store ever switches to passwordless/OTP login this will need updating)
 - The [ntfy](https://ntfy.sh) app on your phone (free, no signup)
+- (Optional) a customer account on the store — `SHOP_EMAIL` / `SHOP_PASSWORD`
+  make requests with a logged-in session. Not required; the public feed
+  already carries the sale prices.
 - (Optional) an SMTP account for email alerts — e.g. a Gmail address with
   an [app password](https://myaccount.google.com/apppasswords)
 
@@ -41,7 +59,7 @@ commit it):
 ```
 NTFY_TOPIC=pick-something-long-and-random
 
-# Required - sale prices are only visible to logged-in customers
+# Optional - browse with a logged-in session (not needed for prices)
 SHOP_EMAIL=you@example.com
 SHOP_PASSWORD=your_store_password
 
@@ -78,8 +96,7 @@ a `screen`/`tmux` session, or a systemd user service / Task Scheduler entry.
    **Read and write permissions** → Save. (Lets the workflow commit updated
    `seen_deals.json` after each run.)
 4. Repo → **Actions** tab → select "Casio deal check" → **Run workflow** to
-   test it manually. Check the log for `Logged in as a customer.` and
-   `Scraped prices for N products`.
+   test it manually. Check the log for `Checked N unique products`.
 5. From then on it runs automatically every 15 minutes, for free.
 
 ## Email setup notes (optional)
