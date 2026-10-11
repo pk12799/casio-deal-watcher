@@ -1,24 +1,4 @@
 {
-  "51838292328729:2747.5": {
-    "id": 51838292328729,
-    "title": "LTP-SN6KGSL-7A",
-    "price": 2747.5,
-    "compare_at": 5495.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/ltp-sn6kgsl-7a?variant=51838292328729",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN6KGSL-7A_1.jpg?v=1767945484",
-    "seen_at": "2026-10-09T23:01:11.550817"
-  },
-  "51838294196505:1897.5": {
-    "id": 51838294196505,
-    "title": "LTP-SN8YGL-7B",
-    "price": 1897.5,
-    "compare_at": 3795.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/ltp-sn8ygl-7b?variant=51838294196505",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN8YGL-7B_1.jpg?v=1767946416",
-    "seen_at": "2026-10-09T23:01:11.891891"
-  },
   "51123922927897:1797.5": {
     "id": 51123922927897,
     "title": "LTP-SN5YD-2A",
@@ -378,5 +358,25 @@
     "url": "https://casiostore.bhawar.com/products/casio-men-mtp-vt04l-7edf-watch?variant=50750552736025",
     "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-VT04L-7E.png?v=1751281920",
     "seen_at": "2026-10-10T14:01:24.065150"
+  },
+  "51838292328729:2747.5": {
+    "id": 51838292328729,
+    "title": "LTP-SN6KGSL-7A",
+    "price": 2747.5,
+    "compare_at": 5495.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/ltp-sn6kgsl-7a?variant=51838292328729",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN6KGSL-7A_1.jpg?v=1767945484",
+    "seen_at": "2026-10-11T00:01:19.743007"
+  },
+  "51838294196505:1897.5": {
+    "id": 51838294196505,
+    "title": "LTP-SN8YGL-7B",
+    "price": 1897.5,
+    "compare_at": 3795.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/ltp-sn8ygl-7b?variant=51838294196505",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN8YGL-7B_1.jpg?v=1767946416",
+    "seen_at": "2026-10-11T00:01:20.119257"
   }
 }
