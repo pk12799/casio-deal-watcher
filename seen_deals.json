@@ -1,54 +1,4 @@
 {
-  "51123922927897:1797.5": {
-    "id": 51123922927897,
-    "title": "LTP-SN5YD-2A",
-    "price": 1797.5,
-    "compare_at": 3595.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-mtp-sn5yd-2a-blue-analog-womens-watch?variant=51123922927897",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN5YD-2A_20_1.jpg?v=1754304397",
-    "seen_at": "2026-10-13T12:01:18.758891"
-  },
-  "51123926335769:1647.5": {
-    "id": 51123926335769,
-    "title": "LTP-SN5YL-7A",
-    "price": 1647.5,
-    "compare_at": 3295.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-ltp-sn5yl-7a-white-analog-womens-watch?variant=51123926335769",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN5YL-7A_20_1.jpg?v=1754304525",
-    "seen_at": "2026-10-13T12:01:18.976702"
-  },
-  "50750543003929:1997.5": {
-    "id": 50750543003929,
-    "title": "LTP-VT01GL-1B",
-    "price": 1997.5,
-    "compare_at": 3995.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-ltp-vt01gl-1budf-black-analog-womens-watch?variant=50750543003929",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT01GL-1B_Seq1.jpg?v=1751281196",
-    "seen_at": "2026-10-13T12:01:19.213629"
-  },
-  "50750543102233:1647.5": {
-    "id": 50750543102233,
-    "title": "LTP-VT01L-1B",
-    "price": 1647.5,
-    "compare_at": 3295.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-ltp-vt01l-1budf-black-analog-womens-watch?variant=50750543102233",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT01L-1B_Seq1.jpg?v=1751281201",
-    "seen_at": "2026-10-13T12:01:19.488362"
-  },
-  "50750550737177:1847.5": {
-    "id": 50750550737177,
-    "title": "LTP-VT03BL-7B",
-    "price": 1847.5,
-    "compare_at": 3695.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-ladies-ltp-vt03bl-7bdf-watch?variant=50750550737177",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT03BL-7B.png?v=1751281806",
-    "seen_at": "2026-10-13T12:01:19.750975"
-  },
   "50750539694361:2147.5": {
     "id": 50750539694361,
     "title": "LTP-1275SG-9A",
@@ -298,5 +248,95 @@
     "url": "https://casiostore.bhawar.com/products/casio-men-mtp-vt04l-7edf-watch?variant=50750552736025",
     "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-VT04L-7E.png?v=1751281920",
     "seen_at": "2026-10-14T12:01:23.462527"
+  },
+  "50750543102233:1647.5": {
+    "id": 50750543102233,
+    "title": "LTP-VT01L-1B",
+    "price": 1647.5,
+    "compare_at": 3295.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-ltp-vt01l-1budf-black-analog-womens-watch?variant=50750543102233",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT01L-1B_Seq1.jpg?v=1751281201",
+    "seen_at": "2026-10-14T13:01:18.529872"
+  },
+  "50750550737177:1847.5": {
+    "id": 50750550737177,
+    "title": "LTP-VT03BL-7B",
+    "price": 1847.5,
+    "compare_at": 3695.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-ladies-ltp-vt03bl-7bdf-watch?variant=50750550737177",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT03BL-7B.png?v=1751281806",
+    "seen_at": "2026-10-14T13:01:18.992943"
+  },
+  "51123926335769:1647.5": {
+    "id": 51123926335769,
+    "title": "LTP-SN5YL-7A",
+    "price": 1647.5,
+    "compare_at": 3295.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-ltp-sn5yl-7a-white-analog-womens-watch?variant=51123926335769",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN5YL-7A_20_1.jpg?v=1754304525",
+    "seen_at": "2026-10-14T13:01:19.472397"
+  },
+  "51123922927897:1797.5": {
+    "id": 51123922927897,
+    "title": "LTP-SN5YD-2A",
+    "price": 1797.5,
+    "compare_at": 3595.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-mtp-sn5yd-2a-blue-analog-womens-watch?variant=51123922927897",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN5YD-2A_20_1.jpg?v=1754304397",
+    "seen_at": "2026-10-14T13:01:20.008692"
+  },
+  "50750543003929:1997.5": {
+    "id": 50750543003929,
+    "title": "LTP-VT01GL-1B",
+    "price": 1997.5,
+    "compare_at": 3995.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-ltp-vt01gl-1budf-black-analog-womens-watch?variant=50750543003929",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT01GL-1B_Seq1.jpg?v=1751281196",
+    "seen_at": "2026-10-14T13:01:20.477389"
+  },
+  "50750538219801:1847.5": {
+    "id": 50750538219801,
+    "title": "LTP-1234DD-1A",
+    "price": 1847.5,
+    "compare_at": 3695.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-ladies-ltp-1234dd-1adf-watch?variant=50750538219801",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-1234DD-1A.png?v=1751281097",
+    "seen_at": "2026-10-14T13:01:20.992318"
+  },
+  "51261501866265:2497.5": {
+    "id": 51261501866265,
+    "title": "MTP-1302DS-1A",
+    "price": 2497.5,
+    "compare_at": 4995.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-mtp-1302ds-1a-mother-of-pearl-mens-watch?variant=51261501866265",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-1302DS-1AV.png?v=1757308982",
+    "seen_at": "2026-10-14T13:01:21.530422"
+  },
+  "51199082922265:1497.5": {
+    "id": 51199082922265,
+    "title": "LF-30W-8A",
+    "price": 1497.5,
+    "compare_at": 2995.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-lf-30w-8a-silver-digital-unisex-watch?variant=51199082922265",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LF-30W-8A.png?v=1755868276",
+    "seen_at": "2026-10-14T13:01:21.983296"
+  },
+  "50750499094809:1897.5": {
+    "id": 50750499094809,
+    "title": "MTP-VD03D-3A1",
+    "price": 1897.5,
+    "compare_at": 3795.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-mtp-vd03d-3a1udf-mens-watch?variant=50750499094809",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-VD03D-3A1U.png?v=1751280381",
+    "seen_at": "2026-10-14T13:01:22.505126"
   }
 }
