@@ -1,24 +1,4 @@
 {
-  "50750521704729:847.5": {
-    "id": 50750521704729,
-    "title": "F-200W-1A",
-    "price": 847.5,
-    "compare_at": 1695.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-f-200w-1adf-watch?variant=50750521704729",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/F-200W-1A_l.jpg?v=1751280745",
-    "seen_at": "2026-10-19T10:01:18.735322"
-  },
-  "51838294229273:1747.5": {
-    "id": 51838294229273,
-    "title": "LTP-SN8YL-2B",
-    "price": 1747.5,
-    "compare_at": 3495.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/ltp-sn8yl-2b?variant=51838294229273",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN8YL-2B_1.jpg?v=1767946471",
-    "seen_at": "2026-10-19T10:01:19.144839"
-  },
   "50750500765977:2497.5": {
     "id": 50750500765977,
     "title": "MTP-VT01G-9B",
@@ -198,5 +178,15 @@
     "url": "https://casiostore.bhawar.com/products/casio-ltp-vt04d-2adf-blue-analog-womens-watch?variant=50750551064857",
     "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT04D-2A.png?v=1751281835",
     "seen_at": "2026-10-19T22:01:17.028078"
+  },
+  "51838294229273:1747.5": {
+    "id": 51838294229273,
+    "title": "LTP-SN8YL-2B",
+    "price": 1747.5,
+    "compare_at": 3495.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/ltp-sn8yl-2b?variant=51838294229273",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN8YL-2B_1.jpg?v=1767946471",
+    "seen_at": "2026-10-20T11:01:16.154202"
   }
 }
