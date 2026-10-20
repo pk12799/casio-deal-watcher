@@ -1,24 +1,4 @@
 {
-  "51123926040857:1647.5": {
-    "id": 51123926040857,
-    "title": "LTP-SN5YL-3A",
-    "price": 1647.5,
-    "compare_at": 3295.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-ltp-sn5yl-3a-womens-watch?variant=51123926040857",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN5YL-3A_20_1.jpg?v=1754304506",
-    "seen_at": "2026-10-19T21:01:14.225261"
-  },
-  "51123920601369:1797.5": {
-    "id": 51123920601369,
-    "title": "MTP-SN5YGL-2A",
-    "price": 1797.5,
-    "compare_at": 3595.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-mtp-sn5ygl-2a-mens-watch?variant=51123920601369",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-SN5YGL-2A_20_1.jpg?v=1754304331",
-    "seen_at": "2026-10-19T21:01:14.639605"
-  },
   "50750551064857:1847.5": {
     "id": 50750551064857,
     "title": "LTP-VT04D-2A",
@@ -1798,5 +1778,25 @@
     "url": "https://casiostore.bhawar.com/products/casio-ltp-vt04d-7adf-white-analog-womens-watch?variant=50750551097625",
     "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-VT04D-7A.png?v=1751281838",
     "seen_at": "2026-10-20T20:01:12.867308"
+  },
+  "51123926040857:1647.5": {
+    "id": 51123926040857,
+    "title": "LTP-SN5YL-3A",
+    "price": 1647.5,
+    "compare_at": 3295.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-ltp-sn5yl-3a-womens-watch?variant=51123926040857",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN5YL-3A_20_1.jpg?v=1754304506",
+    "seen_at": "2026-10-20T22:01:16.150813"
+  },
+  "51123920601369:1797.5": {
+    "id": 51123920601369,
+    "title": "MTP-SN5YGL-2A",
+    "price": 1797.5,
+    "compare_at": 3595.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-mtp-sn5ygl-2a-mens-watch?variant=51123920601369",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-SN5YGL-2A_20_1.jpg?v=1754304331",
+    "seen_at": "2026-10-20T22:01:16.620819"
   }
 }
