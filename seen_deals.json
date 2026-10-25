@@ -1,14 +1,4 @@
 {
-  "51838294196505:1897.5": {
-    "id": 51838294196505,
-    "title": "LTP-SN8YGL-7B",
-    "price": 1897.5,
-    "compare_at": 3795.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/ltp-sn8ygl-7b?variant=51838294196505",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN8YGL-7B_1.jpg?v=1767946416",
-    "seen_at": "2026-10-24T10:01:13.733258"
-  },
   "51838294393113:1897.5": {
     "id": 51838294393113,
     "title": "LTP-SN8YRL-1B",
@@ -108,5 +98,15 @@
     "url": "https://casiostore.bhawar.com/products/casio-ltp-sn5yl-3a-womens-watch?variant=51123926040857",
     "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN5YL-3A_20_1.jpg?v=1754304506",
     "seen_at": "2026-10-25T02:01:11.685039"
+  },
+  "51838294196505:1897.5": {
+    "id": 51838294196505,
+    "title": "LTP-SN8YGL-7B",
+    "price": 1897.5,
+    "compare_at": 3795.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/ltp-sn8ygl-7b?variant=51838294196505",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/LTP-SN8YGL-7B_1.jpg?v=1767946416",
+    "seen_at": "2026-10-25T11:01:10.626615"
   }
 }
