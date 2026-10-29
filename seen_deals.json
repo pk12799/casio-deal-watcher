@@ -1,14 +1,4 @@
 {
-  "50750552572185:1747.5": {
-    "id": 50750552572185,
-    "title": "MTP-VT03BL-7B",
-    "price": 1747.5,
-    "compare_at": 3495.0,
-    "discount_pct": 50.0,
-    "url": "https://casiostore.bhawar.com/products/casio-men-mtp-vt03bl-7bdf-watch?variant=50750552572185",
-    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-VT03BL-7B.png?v=1751281898",
-    "seen_at": "2026-10-28T08:01:24.812146"
-  },
   "51123917193497:1997.5": {
     "id": 51123917193497,
     "title": "MTP-SN5YSR-5A",
@@ -78,5 +68,15 @@
     "url": "https://casiostore.bhawar.com/products/casio-mtp-sn5yl-7a-analog-mens-watch?variant=51123921158425",
     "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-SN5YL-7A_20_1.jpg?v=1754304353",
     "seen_at": "2026-10-29T05:01:15.671676"
+  },
+  "50750552572185:1747.5": {
+    "id": 50750552572185,
+    "title": "MTP-VT03BL-7B",
+    "price": 1747.5,
+    "compare_at": 3495.0,
+    "discount_pct": 50.0,
+    "url": "https://casiostore.bhawar.com/products/casio-men-mtp-vt03bl-7bdf-watch?variant=50750552572185",
+    "image_url": "https://cdn.shopify.com/s/files/1/0910/0073/3977/files/MTP-VT03BL-7B.png?v=1751281898",
+    "seen_at": "2026-10-29T09:01:19.841125"
   }
 }
